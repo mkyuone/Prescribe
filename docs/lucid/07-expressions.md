@@ -21,6 +21,7 @@
 - DATE compares by chronological order.
 - ENUM compares by ordinal.
 - BOOLEAN supports only `=` and `<>`.
+- ARRAY, RECORD, SET, POINTER, CLASS, TEXTFILE, and RANDOMFILE are not comparable.
 
 **Boolean**
 - `AND`, `OR`, `NOT`.
@@ -38,9 +39,31 @@
 - `@` (address-of) returns a pointer to an lvalue.
 - `^` (dereference) returns the value pointed to by a pointer.
 
+### Operator type compatibility matrix
+
+| Operator(s) | Operand types | Result type | Errors |
+|-------------|--------------|-------------|--------|
+| `+ - *` | INTEGER, INTEGER | INTEGER | RangeError on overflow |
+| `+ - *` | REAL, REAL | REAL | RangeError on overflow/underflow |
+| `/` | INTEGER, INTEGER | REAL | RuntimeError on divide by zero |
+| `/` | REAL, REAL | REAL | RuntimeError on divide by zero; RangeError on overflow/underflow |
+| `DIV MOD` | INTEGER, INTEGER | INTEGER | RuntimeError on divide by zero |
+| `AND OR NOT` | BOOLEAN | BOOLEAN | TypeError if non-BOOLEAN |
+| `&` | STRING/CHAR | STRING | TypeError if non-STRING/CHAR |
+| Comparisons | INTEGER/REAL/CHAR/STRING/DATE/ENUM | BOOLEAN | TypeError if incompatible types |
+| `IN` | ENUM, SET OF ENUM | BOOLEAN | TypeError if base types differ |
+| `UNION INTERSECT DIFF` | SET OF ENUM, SET OF ENUM | SET OF ENUM | TypeError if base types differ |
+| `@` | lvalue | POINTER TO type | TypeError if not lvalue |
+| `^` | POINTER TO type | type | RuntimeError on NULL |
+
+### Numeric overflow and underflow
+- INTEGER operations that exceed range raise `RangeError`.
+- REAL operations that overflow or underflow raise `RangeError`.
+- Intermediate results are checked at each operator application.
+
 ### Precedence (highest to lowest)
 1. Parentheses `(...)`
-2. Unary `+`, unary `-`, `NOT`
+2. Unary `+`, unary `-`, `NOT`, `@`, `^`
 3. `*`, `/`, `DIV`, `MOD`
 4. `+`, `-`
 5. `&`
@@ -53,6 +76,17 @@
 - Left‑to‑right within the same precedence level.
 - All operands are evaluated before any operator is applied.
 - Operator operands must be type‑compatible; no implicit conversions are performed.
+
+### Evaluation and side effects
+- Function arguments are evaluated left-to-right before the call.
+- Array index expressions are evaluated left-to-right before access.
+- Field access evaluates the base expression before selecting the field.
+
+Example (evaluation order):
+```lucid
+X <- F(A(), B()) + C(D(), E())
+```
+Order: `A()`, `B()`, `F(...)`, `D()`, `E()`, `C(...)`, then `+`.
 
 ---
 

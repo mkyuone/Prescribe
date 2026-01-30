@@ -72,6 +72,11 @@ ENDPROGRAM
 - The program ends when `ENDPROGRAM` is reached or a runtime error occurs.
 - Indentation is not syntactically significant but is strongly recommended.
 
+**Terminology**
+- A **block** is a sequence of zero or more declarations followed by zero or more statements.
+- A **statement** is any executable construct defined in the grammar.
+- A **body** is the block associated with a control structure, procedure, function, or class member.
+
 ---
 
 ## 3. Lexical Rules
@@ -114,11 +119,17 @@ ENDPROGRAM
 **CHAR**
 - Single character in single quotes, with escapes.
 - Example: `'A'`, `'\n'`, `'\x41'`.
+- After escape processing, the literal must be exactly one character or `SyntaxError`.
 
 **STRING**
 - Double quotes with escape sequences.
 - Example: `"hello"`, `"line\n"`.
 - Supported escapes: `\n`, `\r`, `\t`, `\\`, `\"`, `\'`, `\xNN` (hex byte).
+
+**Escape sequence rules**
+- Escapes are interpreted in both CHAR and STRING literals.
+- Invalid escape sequences raise `SyntaxError`.
+- `\xNN` must use exactly two hexadecimal digits.
 
 **DATE**
 - Date literal: `DATE "YYYY-MM-DD"`.
@@ -153,6 +164,7 @@ Additional type rules:
 - DATE values must be within `0001-01-01` to `9999-12-31`, inclusive.
 - ARRAY indices are INTEGER and bounds are inclusive.
 - CLASS and POINTER values may be `NULL`.
+- A year is a leap year if it is divisible by 4, except years divisible by 100 are not leap years unless also divisible by 400.
 
 ---
 
@@ -254,6 +266,7 @@ Type matching rules:
 - DATE compares by chronological order.
 - ENUM compares by ordinal.
 - BOOLEAN supports only `=` and `<>`.
+- ARRAY, RECORD, SET, POINTER, CLASS, TEXTFILE, and RANDOMFILE are not comparable.
 
 **Boolean**
 - `AND`, `OR`, `NOT`.
@@ -271,9 +284,31 @@ Type matching rules:
 - `@` (address-of) returns a pointer to an lvalue.
 - `^` (dereference) returns the value pointed to by a pointer.
 
+### Operator type compatibility matrix
+
+| Operator(s) | Operand types | Result type | Errors |
+|-------------|--------------|-------------|--------|
+| `+ - *` | INTEGER, INTEGER | INTEGER | RangeError on overflow |
+| `+ - *` | REAL, REAL | REAL | RangeError on overflow/underflow |
+| `/` | INTEGER, INTEGER | REAL | RuntimeError on divide by zero |
+| `/` | REAL, REAL | REAL | RuntimeError on divide by zero; RangeError on overflow/underflow |
+| `DIV MOD` | INTEGER, INTEGER | INTEGER | RuntimeError on divide by zero |
+| `AND OR NOT` | BOOLEAN | BOOLEAN | TypeError if non-BOOLEAN |
+| `&` | STRING/CHAR | STRING | TypeError if non-STRING/CHAR |
+| Comparisons | INTEGER/REAL/CHAR/STRING/DATE/ENUM | BOOLEAN | TypeError if incompatible types |
+| `IN` | ENUM, SET OF ENUM | BOOLEAN | TypeError if base types differ |
+| `UNION INTERSECT DIFF` | SET OF ENUM, SET OF ENUM | SET OF ENUM | TypeError if base types differ |
+| `@` | lvalue | POINTER TO type | TypeError if not lvalue |
+| `^` | POINTER TO type | type | RuntimeError on NULL |
+
+### Numeric overflow and underflow
+- INTEGER operations that exceed range raise `RangeError`.
+- REAL operations that overflow or underflow raise `RangeError`.
+- Intermediate results are checked at each operator application.
+
 ### Precedence (highest to lowest)
 1. Parentheses `(...)`
-2. Unary `+`, unary `-`, `NOT`
+2. Unary `+`, unary `-`, `NOT`, `@`, `^`
 3. `*`, `/`, `DIV`, `MOD`
 4. `+`, `-`
 5. `&`
@@ -286,6 +321,17 @@ Type matching rules:
 - Left‑to‑right within the same precedence level.
 - All operands are evaluated before any operator is applied.
 - Operator operands must be type‑compatible; no implicit conversions are performed.
+
+### Evaluation and side effects
+- Function arguments are evaluated left-to-right before the call.
+- Array index expressions are evaluated left-to-right before access.
+- Field access evaluates the base expression before selecting the field.
+
+Example (evaluation order):
+```lucid
+X <- F(A(), B()) + C(D(), E())
+```
+Order: `A()`, `B()`, `F(...)`, `D()`, `E()`, `C(...)`, then `+`.
 
 ---
 
@@ -309,6 +355,7 @@ Runtime behavior:
   - DATE: token `YYYY-MM-DD`, must be a valid Gregorian date or `RangeError`.
 - If a token cannot be parsed for the target type, raise `TypeError`.
 - If no token is available, raise `RuntimeError`.
+- Integer and real parsing must reject tokens with trailing non-numeric characters.
 
 ### OUTPUT
 Syntax:
@@ -328,6 +375,7 @@ Conversion rules:
 - STRING: the contents.
 - DATE: `YYYY-MM-DD`.
 - ARRAY/RECORD/SET/POINTER/CLASS: not directly outputtable; `TypeError`.
+- OUTPUT of a REAL that is NaN or infinity raises `RuntimeError`.
 
 ---
 
@@ -440,6 +488,7 @@ CALL Name(<arguments>)
 ```
 - `CALL` is only valid for procedures. Using `CALL` on a function raises `TypeError`.
 - All argument expressions are evaluated left‑to‑right before the call.
+- For methods, use a dotted name: `CALL Obj.Method(...)`.
 
 ### Parameter modes
 - `BYVAL` (copy in) and `BYREF` (reference).
@@ -546,6 +595,11 @@ Runtime behavior:
 - `"WRITE"` truncates existing files or creates a new file; `"APPEND"` creates a new file if missing and positions at the end.
 - `READFILE` is valid only for files opened in `"READ"`; `WRITEFILE` only for `"WRITE"`/`"APPEND"`.
 
+File error cases:
+- Opening a file with an invalid mode string raises `FileError`.
+- Reading/writing on a file not opened in a compatible mode raises `FileError`.
+- Using `READFILE`, `WRITEFILE`, or `EOF` on a closed file raises `FileError`.
+
 ### Random files
 
 **Open**
@@ -569,6 +623,7 @@ Runtime behavior:
 - `PUTRECORD` writes `R` at the current position.
 - Records cannot contain STRING or SET fields; otherwise `TypeError`.
 - Random file operations are valid only when the file is opened in `"RANDOM"` mode.
+- `SEEK` with `address < 1` raises `RangeError`.
 
 ---
 
@@ -758,7 +813,8 @@ while_stmt      = "WHILE", expr, "DO", block, "ENDWHILE" ;
 
 repeat_stmt     = "REPEAT", block, "UNTIL", expr ;
 
-call_stmt       = "CALL", identifier, "(", [ arg_list ], ")" ;
+call_stmt       = "CALL", proc_ref, "(", [ arg_list ], ")" ;
+proc_ref        = identifier, { ".", identifier } ;
 
 return_stmt     = "RETURN", [ expr ] ;
 
@@ -844,3 +900,97 @@ letter          = "A" | ... | "Z" | "a" | ... | "z" ;
 - Unit tests for lexer and parser (token boundaries, precedence).
 - Type‑checker tests (valid/invalid assignments and calls).
 - Runtime tests for each error category.
+
+---
+
+## Appendix A. Conformance Tests
+
+These are minimal, must-pass programs for a compliant implementation.
+
+**Expressions**
+```lucid
+PROGRAM ExprTest
+    DECLARE A : INTEGER
+    A <- 7 DIV 3
+    OUTPUT A
+ENDPROGRAM
+```
+
+**Control flow**
+```lucid
+PROGRAM LoopTest
+    DECLARE I : INTEGER
+    FOR I <- 1 TO 3
+        OUTPUT I
+    NEXT I
+ENDPROGRAM
+```
+
+**Procedures and functions**
+```lucid
+PROGRAM CallTest
+    OUTPUT Inc(5)
+ENDPROGRAM
+
+FUNCTION Inc(X : INTEGER) RETURNS INTEGER
+    RETURN X + 1
+ENDFUNCTION
+```
+
+**Files**
+```lucid
+PROGRAM FileTest
+    DECLARE F : TEXTFILE
+    OPENFILE(F, "t.txt", "WRITE")
+    WRITEFILE(F, "OK")
+    CLOSEFILE(F)
+ENDPROGRAM
+```
+
+**OOP**
+```lucid
+PROGRAM OopTest
+    DECLARE P : Person
+    P <- NEW Person("Ada")
+    OUTPUT P.GetName()
+ENDPROGRAM
+
+CLASS Person
+    PRIVATE
+        Name : STRING
+    PUBLIC
+        CONSTRUCTOR Person(NewName : STRING)
+            Name <- NewName
+        ENDCONSTRUCTOR
+
+        FUNCTION GetName() RETURNS STRING
+            RETURN Name
+        ENDFUNCTION
+ENDCLASS
+```
+
+---
+
+## Appendix B. Glossary and Symbol Index
+
+**Glossary**
+- **Block**: Declarations followed by statements, evaluated sequentially.
+- **Declaration**: A statement that introduces a name (variable, constant, type, procedure, function, class).
+- **Expression**: A construct that yields a value.
+- **Lvalue**: A storage location that can appear on the left side of assignment.
+- **Statement**: An executable construct in a block.
+
+**Symbol index**
+
+| Symbol | Meaning |
+|--------|---------|
+| `<-`, `←` | Assignment |
+| `+ - * /` | Arithmetic |
+| `DIV MOD` | Integer division and remainder |
+| `= <> < <= > >=` | Comparisons |
+| `AND OR NOT` | Boolean operators |
+| `&` | String concatenation |
+| `IN` | Set membership |
+| `UNION INTERSECT DIFF` | Set operations |
+| `@` | Address-of |
+| `^` | Dereference |

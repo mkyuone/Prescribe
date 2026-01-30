@@ -27,6 +27,7 @@ CALL Name(<arguments>)
 ```
 - `CALL` is only valid for procedures. Using `CALL` on a function raises `TypeError`.
 - All argument expressions are evaluated left‑to‑right before the call.
+- For methods, use a dotted name: `CALL Obj.Method(...)`.
 
 ### Parameter modes
 - `BYVAL` (copy in) and `BYREF` (reference).

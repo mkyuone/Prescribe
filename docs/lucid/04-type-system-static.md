@@ -24,6 +24,7 @@ Additional type rules:
 - DATE values must be within `0001-01-01` to `9999-12-31`, inclusive.
 - ARRAY indices are INTEGER and bounds are inclusive.
 - CLASS and POINTER values may be `NULL`.
+- A year is a leap year if it is divisible by 4, except years divisible by 100 are not leap years unless also divisible by 400.
 
 ---
 

@@ -18,6 +18,7 @@ Runtime behavior:
   - DATE: token `YYYY-MM-DD`, must be a valid Gregorian date or `RangeError`.
 - If a token cannot be parsed for the target type, raise `TypeError`.
 - If no token is available, raise `RuntimeError`.
+- Integer and real parsing must reject tokens with trailing non-numeric characters.
 
 ### OUTPUT
 Syntax:
@@ -37,6 +38,7 @@ Conversion rules:
 - STRING: the contents.
 - DATE: `YYYY-MM-DD`.
 - ARRAY/RECORD/SET/POINTER/CLASS: not directly outputtable; `TypeError`.
+- OUTPUT of a REAL that is NaN or infinity raises `RuntimeError`.
 
 ---
 

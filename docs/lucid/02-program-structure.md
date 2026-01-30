@@ -15,5 +15,10 @@ ENDPROGRAM
 - The program ends when `ENDPROGRAM` is reached or a runtime error occurs.
 - Indentation is not syntactically significant but is strongly recommended.
 
+**Terminology**
+- A **block** is a sequence of zero or more declarations followed by zero or more statements.
+- A **statement** is any executable construct defined in the grammar.
+- A **body** is the block associated with a control structure, procedure, function, or class member.
+
 ---
 

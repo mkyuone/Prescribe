@@ -38,11 +38,17 @@
 **CHAR**
 - Single character in single quotes, with escapes.
 - Example: `'A'`, `'\n'`, `'\x41'`.
+- After escape processing, the literal must be exactly one character or `SyntaxError`.
 
 **STRING**
 - Double quotes with escape sequences.
 - Example: `"hello"`, `"line\n"`.
 - Supported escapes: `\n`, `\r`, `\t`, `\\`, `\"`, `\'`, `\xNN` (hex byte).
+
+**Escape sequence rules**
+- Escapes are interpreted in both CHAR and STRING literals.
+- Invalid escape sequences raise `SyntaxError`.
+- `\xNN` must use exactly two hexadecimal digits.
 
 **DATE**
 - Date literal: `DATE "YYYY-MM-DD"`.

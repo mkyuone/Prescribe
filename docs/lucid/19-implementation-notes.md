@@ -21,3 +21,6 @@
 - Unit tests for lexer and parser (token boundaries, precedence).
 - Type‑checker tests (valid/invalid assignments and calls).
 - Runtime tests for each error category.
+
+---
+

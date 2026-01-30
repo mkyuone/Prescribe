@@ -75,7 +75,8 @@ while_stmt      = "WHILE", expr, "DO", block, "ENDWHILE" ;
 
 repeat_stmt     = "REPEAT", block, "UNTIL", expr ;
 
-call_stmt       = "CALL", identifier, "(", [ arg_list ], ")" ;
+call_stmt       = "CALL", proc_ref, "(", [ arg_list ], ")" ;
+proc_ref        = identifier, { ".", identifier } ;
 
 return_stmt     = "RETURN", [ expr ] ;
 

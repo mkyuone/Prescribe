@@ -19,3 +19,5 @@
 - [17. Errors (CRITICAL)](./lucid/17-errors-critical.md)
 - [18. Formal Grammar (EBNF)](./lucid/18-formal-grammar-ebnf.md)
 - [19. Implementation Notes](./lucid/19-implementation-notes.md)
+- [Appendix A. Conformance Tests](./lucid/appendix-a-conformance-tests.md)
+- [Appendix B. Glossary and Symbol Index](./lucid/appendix-b-glossary-and-symbol-index.md)

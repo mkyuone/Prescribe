@@ -29,6 +29,11 @@ Runtime behavior:
 - `"WRITE"` truncates existing files or creates a new file; `"APPEND"` creates a new file if missing and positions at the end.
 - `READFILE` is valid only for files opened in `"READ"`; `WRITEFILE` only for `"WRITE"`/`"APPEND"`.
 
+File error cases:
+- Opening a file with an invalid mode string raises `FileError`.
+- Reading/writing on a file not opened in a compatible mode raises `FileError`.
+- Using `READFILE`, `WRITEFILE`, or `EOF` on a closed file raises `FileError`.
+
 ### Random files
 
 **Open**
@@ -52,6 +57,7 @@ Runtime behavior:
 - `PUTRECORD` writes `R` at the current position.
 - Records cannot contain STRING or SET fields; otherwise `TypeError`.
 - Random file operations are valid only when the file is opened in `"RANDOM"` mode.
+- `SEEK` with `address < 1` raises `RangeError`.
 
 ---
 
