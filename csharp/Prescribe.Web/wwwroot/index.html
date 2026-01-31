@@ -2,31 +2,317 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prescribe.Web</title>
-    <base href="/" />
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="Prescribe.Web.styles.css" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prescribe</title>
+  <base href="/" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="theme-color" content="#2563eb" />
+
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+
+  <style id="dynamicStyles"></style>
 </head>
 
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+  <div class="loadingOverlay" id="loadingOverlay" role="status" aria-live="polite" aria-label="Loading Prescribe">
+    <div class="loadingCard">
+      <div class="loadingSpinner" aria-hidden="true"></div>
+      <div class="loadingText">Loading Prescribe...</div>
     </div>
+  </div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+  <div class="app">
+    <header>
+      <div class="headerInner">
+        <div class="brand">
+          <span class="material-icons" aria-hidden="true">integration_instructions</span>
+          <div class="brandText">
+            <h1>Prescribe</h1>
+            <div class="sub">Executable pseudocode in your browser.</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="runGroup menuWrap" id="runGroup">
+            <button class="toolBtn primary" id="runBtn" type="button" title="Run All (Cmd/Ctrl + Enter)">
+              <span class="material-icons" aria-hidden="true">play_arrow</span>
+              <span class="toolLabel" id="runLabel" style="opacity:1; transform:none;">Run All</span>
+              <span class="runMeta">
+                <span class="keyChip" id="hintRun">Ctrl Enter</span>
+              </span>
+            </button>
+
+            <button class="toolBtn primary" id="runModeBtn" type="button" title="Run options"
+              aria-haspopup="menu" aria-expanded="false">
+              <span class="material-icons" aria-hidden="true">arrow_drop_down</span>
+            </button>
+
+            <div class="menu" id="runMenu" role="menu" aria-label="Run options">
+              <button class="menuItem" id="runAllBtn" type="button" role="menuitem">
+                <span class="material-icons" aria-hidden="true">description</span>
+                <span class="miLabel">Run All</span>
+                <span class="miRight" aria-hidden="true">
+                  <span class="miHint defaultBadge">Default</span>
+                  <span class="material-icons miCheck">done</span>
+                </span>
+              </button>
+
+              <button class="menuItem" id="runSelBtn" type="button" role="menuitem">
+                <span class="material-icons" aria-hidden="true">select_all</span>
+                <span class="miLabel">Run Selection</span>
+                <span class="miRight" aria-hidden="true">
+                  <span class="miHint defaultBadge">Default</span>
+                  <span class="material-icons miCheck">done</span>
+                </span>
+              </button>
+
+              <button class="menuItem" id="runCellBtn" type="button" role="menuitem">
+                <span class="material-icons" aria-hidden="true">view_agenda</span>
+                <span class="miLabel">Run Cell</span>
+                <span class="miRight" aria-hidden="true">
+                  <span class="miHint defaultBadge">Default</span>
+                  <span class="material-icons miCheck">done</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <button class="toolBtn collapse" id="openBtn" type="button" title="Open (Cmd/Ctrl + O)" aria-label="Open file">
+            <span class="material-icons" aria-hidden="true">folder_open</span>
+            <span class="toolLabel">Open</span>
+            <span class="hintPill" id="hintOpen">Cmd O</span>
+          </button>
+
+          <button class="toolBtn collapse" id="saveBtn" type="button" title="Save (Cmd/Ctrl + S)" aria-label="Save file">
+            <span class="material-icons" aria-hidden="true">save</span>
+            <span class="toolLabel">Save</span>
+            <span class="hintPill" id="hintSave">Cmd S</span>
+          </button>
+
+          <button class="toolBtn collapse" id="shareBtn" type="button" title="Share link" aria-label="Share link">
+            <span class="material-icons" aria-hidden="true">share</span>
+            <span class="toolLabel">Share</span>
+            <span class="hintPill">Link</span>
+          </button>
+
+          <div class="menuWrap">
+            <button class="toolBtn collapse" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false" title="More">
+              <span class="material-icons" aria-hidden="true">more_horiz</span>
+              <span class="toolLabel">More</span>
+            </button>
+
+            <div class="menu" id="moreMenu" role="menu" aria-label="More actions">
+              <button class="menuItem" id="settingsBtn" type="button" role="menuitem">
+                <span class="material-icons" aria-hidden="true">tune</span>
+                <span class="miLabel">Settings</span>
+                <span class="miHint" id="hintSettings">Cmd ,</span>
+              </button>
+
+              <button class="menuItem" id="clearBtn" type="button" role="menuitem">
+                <span class="material-icons" aria-hidden="true">delete</span>
+                <span class="miLabel">Clear console</span>
+              </button>
+
+              <button class="menuItem" id="aboutBtn" type="button" role="menuitem">
+                <span class="material-icons" aria-hidden="true">info_outline</span>
+                <span class="miLabel">About</span>
+              </button>
+            </div>
+          </div>
+
+          <input type="file" id="fileInput" style="display:none;" accept=".prsd,.txt"/>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="split">
+        <section class="pane editorPane" id="editorPane">
+          <div class="paneHeader">
+            <div class="paneLeft">
+              <div class="paneTitle"><span class="dot"></span>Editor</div>
+              <div class="paneMeta" id="fileMeta">untitled.prsd</div>
+            </div>
+            <div class="paneActions">
+              <button class="iconBtn" id="wrapBtn" type="button" title="Toggle line wrap">
+                <span class="material-icons" aria-hidden="true">wrap_text</span>
+              </button>
+            </div>
+          </div>
+          <textarea class="editorArea" id="editor">PRSD 1.0
+## Hello
+:::prescribe
+PROGRAM Hello
+    OUTPUT "Hello, " & "PRSD!"
+ENDPROGRAM
+:::
+</textarea>
+        </section>
+
+        <div class="resizer" id="dragbar" aria-label="Resize panels"></div>
+
+        <section class="pane consolePane" id="consolePane">
+          <div class="paneHeader">
+            <div class="paneLeft">
+              <div class="paneTitle"><span class="dot"></span>Console</div>
+            </div>
+            <div class="paneActions">
+              <button class="iconBtn danger" id="clearConsoleBtn" type="button" title="Clear console">
+                <span class="material-icons" aria-hidden="true">delete</span>
+              </button>
+            </div>
+          </div>
+          <div class="inputRow">
+            <label for="stdinInput">Input</label>
+            <textarea id="stdinInput" placeholder="Whitespace-delimited tokens for INPUT statements"></textarea>
+          </div>
+          <div id="console" role="log" aria-live="polite"></div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="statusbar">
+      <div class="sbLeft">
+        <span class="sbItem good" id="sbRun"><span class="sbDot"></span><strong>Ready</strong></span>
+        <span class="sbItem good" id="sbDirty"><span class="sbDot"></span><strong>Saved</strong></span>
+        <span class="sbItem bad" id="sbRuntime"><span class="sbDot"></span><strong>Runtime: not loaded</strong></span>
+      </div>
+
+      <div class="sbRight">
+        <span class="sbItem"><strong class="sbMono" id="sbFile">untitled.prsd</strong></span>
+        <span class="sbItem"><strong class="sbMono" id="sbPos">Ln 1, Col 1</strong></span>
+        <span class="sbItem"><strong class="sbMono" id="sbSel">Sel 0</strong></span>
+        <span class="sbItem"><strong class="sbMono" id="sbClock">--:--:--</strong></span>
+      </div>
+    </footer>
+  </div>
+
+  <div class="toast" id="shareToast" role="status" aria-live="polite">
+    <span class="material-icons" id="shareToastIcon" aria-hidden="true">check_circle</span>
+    <div class="toastText">
+      <div class="toastTitle" id="shareToastTitle">Shared code loaded</div>
+      <div class="toastDesc" id="shareToastDesc">This editor opened code from a share link.</div>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
+  </div>
+
+  <div class="overlay" id="aboutOverlay" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="modal modalAbout">
+      <h2 id="aboutTitle">Prescribe <span class="versionTag" id="aboutVersion">v0.0</span></h2>
+      <p>Executable pseudocode for learning algorithms, running fully in your browser.</p>
+      <div class="aboutMeta">
+        <div class="aboutMetaRow">
+          <span class="aboutMetaLabel">Runtime</span>
+          <span class="aboutMetaValue" id="aboutRuntime">WASM</span>
+        </div>
+        <div class="aboutMetaRow">
+          <span class="aboutMetaLabel">Commit</span>
+          <span class="aboutMetaValue aboutMetaCode" id="aboutCommitHash">unknown</span>
+        </div>
+      </div>
+      <p>
+        This software is provided "as is", without warranty of any kind.<br/>
+        Licensed under the MIT License.
+      </p>
+
+      <div class="modalRow">
+        <button class="toolBtn" id="closeAboutBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal modalSettings">
+      <div class="settingsHeader">
+        <div>
+          <h2 id="settingsTitle">Settings</h2>
+          <p class="settingsIntro">Tweak readability and editing comfort.</p>
+        </div>
+      </div>
+
+      <div class="settingsGrid">
+        <section class="settingsCard" aria-label="Preferences">
+          <div class="settingsCardTitle">Preferences</div>
+
+          <div class="settingsSection">
+            <div class="settingsSectionTitle">Font sizes</div>
+            <div class="settingsRow">
+              <label class="settingsLabel" for="editorSizeRange">Editor size</label>
+              <div class="settingsControl settingsRange">
+                <input id="editorSizeRange" type="range" min="12" max="20" step="0.25" />
+                <span class="settingsValue" id="editorSizeLabel">14.00px</span>
+              </div>
+            </div>
+            <div class="settingsRow">
+              <label class="settingsLabel" for="consoleSizeRange">Console size</label>
+              <div class="settingsControl settingsRange">
+                <input id="consoleSizeRange" type="range" min="12" max="20" step="0.25" />
+                <span class="settingsValue" id="consoleSizeLabel">13.50px</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settingsSection">
+            <div class="settingsSectionTitle">Editor behavior</div>
+            <div class="settingsRow">
+              <label class="settingsLabel toggle" for="wrapToggle">
+                <input id="wrapToggle" type="checkbox" />
+                <span>Line wrap</span>
+              </label>
+            </div>
+            <div class="settingsNote">Wrap long lines to stay within the editor width.</div>
+          </div>
+
+          <div class="settingsSection">
+            <div class="settingsSectionTitle">Runtime</div>
+            <div class="settingsRow">
+              <label class="settingsLabel toggle" for="execTimeToggle">
+                <input id="execTimeToggle" type="checkbox" />
+                <span>Show execution time</span>
+              </label>
+            </div>
+            <div class="settingsNote">Adds a "Finished in ..." line after runs.</div>
+          </div>
+        </section>
+
+        <section class="settingsCard" aria-label="Shortcuts">
+          <div class="settingsCardTitle">Shortcuts</div>
+          <table class="shortcuts" aria-label="Keyboard shortcuts">
+            <tbody id="shortcutBody"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="modalRow">
+        <button class="toolBtn" id="closeSettingsBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="shareWarnOverlay" role="dialog" aria-modal="true" aria-labelledby="shareWarnTitle">
+    <div class="modal modalSettings">
+      <div class="warnBlock">
+        <span class="material-icons" aria-hidden="true">warning</span>
+        <div>
+          <h2 id="shareWarnTitle">Share Link Warning</h2>
+          <div class="warnText" id="shareWarnText">This link is long. Continue anyway?</div>
+          <div class="warnHint">Tip: download a .prsd file instead to avoid very long URLs.</div>
+        </div>
+      </div>
+
+      <div class="modalRow">
+        <button class="toolBtn" id="shareWarnCancelBtn" type="button">Cancel</button>
+        <button class="toolBtn" id="shareWarnDownloadBtn" type="button">Download .prsd</button>
+        <button class="toolBtn primary" id="shareWarnConfirmBtn" type="button">Copy anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="blazor-root" style="display:none;"></div>
+
+  <script type="module" src="app.js" defer></script>
+  <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
 </html>

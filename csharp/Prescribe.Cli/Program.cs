@@ -1,8 +1,5 @@
-using Prescribe.Core.Diagnostics;
-using Prescribe.Core.Frontend;
-using Prescribe.Core.Semantics;
+using Prescribe.Core.Runner;
 using Prescribe.Core.Runtime;
-using Prescribe.Core.Source;
 
 namespace Prescribe.Cli;
 
@@ -23,28 +20,23 @@ public static class Program
         }
 
         var text = File.ReadAllText(filePath);
-        var blocks = Prsd.ExtractPrescribeBlocks(text).Select(b => b.Code).ToList();
         var input = Console.In.ReadToEnd();
 
-        try
+        var runnerResult = PrescribeRunner.Run(
+            text,
+            input,
+            new LocalFileSystem()
+        );
+
+        if (!string.IsNullOrWhiteSpace(runnerResult.Output))
         {
-            foreach (var code in blocks)
-            {
-                var lexer = new Lexer(code);
-                var parser = new Parser(lexer);
-                var program = parser.ParseProgram();
-                var checker = new TypeChecker();
-                var sema = checker.Check(program);
-                var interpreter = new Interpreter(program, sema, input, new LocalFileSystem());
-                var output = interpreter.Run();
-                Console.Out.Write(output);
-            }
-            return 0;
+            Console.Out.Write(runnerResult.Output);
         }
-        catch (PrescribeError err)
+        if (!runnerResult.Success)
         {
-            Console.Error.WriteLine(ErrorReporter.Format(err));
+            Console.Error.WriteLine(runnerResult.Error);
             return 1;
         }
+        return 0;
     }
 }
