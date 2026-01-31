@@ -26,6 +26,14 @@ dotnet run --project csharp/Prescribe.Cli -- <file.prsd>
 
 Input is read from stdin as whitespace-delimited tokens. Output is written to stdout.
 
+### WebAssembly (Blazor, standalone)
+```bash
+dotnet build csharp/Prescribe.Web
+dotnet run --project csharp/Prescribe.Web
+```
+
+The WebAssembly host is intentionally minimal (no UI yet).
+
 ### Example
 ```bash
 cat <<'EOF' > /tmp/hello.prsd

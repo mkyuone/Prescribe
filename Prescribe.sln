@@ -1,10 +1,14 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prescribe.Core", "csharp/Prescribe.Core/Prescribe.Core.csproj", "{7E6D8EB8-5B6C-4F87-AE78-7AF8B8828F1A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prescribe.Core", "csharp\Prescribe.Core\Prescribe.Core.csproj", "{7E6D8EB8-5B6C-4F87-AE78-7AF8B8828F1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prescribe.Cli", "csharp/Prescribe.Cli/Prescribe.Cli.csproj", "{5ABEF7B0-2C99-4E3C-9D90-3E3F3E83D28F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prescribe.Cli", "csharp\Prescribe.Cli\Prescribe.Cli.csproj", "{5ABEF7B0-2C99-4E3C-9D90-3E3F3E83D28F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "csharp", "csharp", "{4320918B-7E34-4CE3-8E2D-921D27C9B2AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prescribe.Web", "csharp\Prescribe.Web\Prescribe.Web.csproj", "{CE13921C-009E-4284-A39B-622403E5E284}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,5 +24,12 @@ Global
 		{5ABEF7B0-2C99-4E3C-9D90-3E3F3E83D28F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5ABEF7B0-2C99-4E3C-9D90-3E3F3E83D28F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5ABEF7B0-2C99-4E3C-9D90-3E3F3E83D28F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE13921C-009E-4284-A39B-622403E5E284}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE13921C-009E-4284-A39B-622403E5E284}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE13921C-009E-4284-A39B-622403E5E284}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE13921C-009E-4284-A39B-622403E5E284}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CE13921C-009E-4284-A39B-622403E5E284} = {4320918B-7E34-4CE3-8E2D-921D27C9B2AB}
 	EndGlobalSection
 EndGlobal
