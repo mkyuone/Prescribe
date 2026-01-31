@@ -1,4 +1,4 @@
-# Prescribe Interpreter Design (TS, CLI)
+# Prescribe Interpreter Design (C#, CLI)
 
 Goal: a modular, spec-faithful interpreter for Prescribe (all features), with a CLI front-end now and a browser front-end later.
 
@@ -11,39 +11,39 @@ Phases:
 
 Core rule: evaluation is left-to-right with no short-circuiting, and all type rules match the spec.
 
-## Module layout (proposed)
+## Module layout (implemented)
 
 ```
-src/
-  cli/
-    main.ts              # CLI entry, args, file loading, exit codes
-  source/
-    source_file.ts       # text + line/col mapping
-    prsd.ts              # parse .prsd and extract code blocks
-  frontend/
-    token.ts             # token kinds, keyword table
-    lexer.ts             # ASCII source, escapes, comments, locations
-    parser.ts            # recursive descent from EBNF
-    ast.ts               # node types for statements/expressions/types
-  semantics/
-    symbols.ts           # symbol table, scopes, symbol kinds
-    types.ts             # type system representations
-    resolver.ts          # name binding, access control, overload resolution
-    const_eval.ts        # compile-time constants
-    type_checker.ts      # full type validation and annotation
-  runtime/
-    values.ts            # runtime value shapes
-    store.ts             # stack frames, lvalue handles, heap
-    interpreter.ts       # statement/expression evaluation
-    stdlib.ts            # LENGTH, RIGHT, MID, etc.
-    file_io.ts           # TEXTFILE/RANDOMFILE behavior
-  diagnostics/
-    errors.ts            # error classes + formatting
-    reporter.ts          # format "<ErrorType> at line N: ..."
-  util/
-    math.ts              # integer/real range checks, div/mod
-    strings.ts           # output formatting, escapes
-    dates.ts             # parse/validate Gregorian dates
+csharp/
+  Prescribe.Core/
+    Diagnostics/
+      PrescribeError.cs  # error classes + formatting
+      ErrorReporter.cs   # format "<ErrorType> at line N: ..."
+    Source/
+      Prsd.cs            # parse .prsd and extract code blocks
+    Frontend/
+      Token.cs           # token kinds, keyword table
+      Lexer.cs           # ASCII source, escapes, comments, locations
+      Parser.cs          # recursive descent from EBNF
+      Ast.cs             # node types for statements/expressions/types
+    Semantics/
+      Symbols.cs         # symbol table, scopes, symbol kinds
+      Types.cs           # type system representations
+      ConstEval.cs       # compile-time constants
+      TypeChecker.cs     # full type validation and annotation
+    Runtime/
+      Values.cs          # runtime value shapes
+      Store.cs           # stack frames, lvalue handles, heap
+      Interpreter.cs     # statement/expression evaluation
+      StdLib.cs          # LENGTH, RIGHT, MID, etc.
+      FileIo.cs          # TEXTFILE/RANDOMFILE behavior + I/O abstraction
+    Util/
+      MathUtil.cs        # integer/real range checks, div/mod
+      StringUtil.cs      # output formatting, escapes
+      DateUtil.cs        # parse/validate Gregorian dates
+  Prescribe.Cli/
+    Program.cs           # CLI entry, args, file loading, exit codes
+    LocalFileSystem.cs   # System.IO-backed file system
 ```
 
 ## Source loading
@@ -78,7 +78,7 @@ Enforce syntactic constraints early where required (e.g., invalid lvalue forms).
 
 ## Type system representation
 
-Types are first-class objects in `semantics/types.ts`:
+Types are first-class objects in `Semantics/Types.cs`:
 - Basic: Integer, Real, Boolean, Char, String, Date
 - Composite: Array(bounds, elemType), Record(fields), Enum(members), Set(baseEnum)
 - Ref-like: Pointer(toType), ClassType(name), TextFile, RandomFile(recordType)
@@ -123,18 +123,18 @@ Core checks (non-exhaustive):
 
 ## Runtime model
 
-Value shapes (runtime/values.ts):
+Value shapes (Runtime/Values.cs):
 - Scalar: int (number but range-checked), real (number), boolean, char (string length 1), string, date (YYYY-MM-DD + numeric).
 - Composite: arrays (nested arrays), records (field map), sets (bitset or Set of enum ordinals).
 - Ref-like: pointer { addr }, class ref { objId }, file handles.
 - Null: for pointer/class values.
 
-Store model (runtime/store.ts):
+Store model (Runtime/Store.cs):
 - Stack frames hold locals and parameters (by value or byref alias).
 - Heap stores pointer targets and class objects.
 - Lvalue handles abstract "place" with get/set (var, array element, record field, pointer deref).
 
-Interpreter (runtime/interpreter.ts):
+Interpreter (Runtime/Interpreter.cs):
 - Executes AST statements; evaluates expressions left-to-right.
 - No short-circuiting for AND/OR; always evaluate both sides.
 - Assignments enforce runtime checks: range, null deref, bounds.
@@ -146,7 +146,7 @@ Integer:
 
 Real:
 - IEEE-754 double. If result is NaN or infinite -> RuntimeError.
-- Underflow/overflow -> RangeError (use explicit checks in util/math.ts).
+- Underflow/overflow -> RangeError (use explicit checks in Util/MathUtil.cs).
 
 DIV/MOD:
 - Euclidean semantics with `0 <= r < |b|`.
@@ -205,29 +205,20 @@ All interpreter errors throw typed exceptions that include a source location, ca
 
 ## Operations (CLI)
 
-### Install
-```bash
-npm install
-```
-
 ### Build
 ```bash
-npm run build
+dotnet build Prescribe.sln
 ```
 
 ### Run
 ```bash
-node dist/cli/main.js <file.prsd>
+dotnet run --project csharp/Prescribe.Cli -- <file.prsd>
 ```
 
 Input is read from stdin as whitespace-delimited tokens. Output is written to stdout.
 
-### Bundled CLI (no local Node)
-```bash
-npm run build:bin
-```
-
-Builds platform-specific binaries in `dist-bin/` using a bundled Node runtime.
+### Notes
+The core runtime is Blazor-ready via an abstract file system interface in `Runtime/FileIo.cs`.
 
 ### Error format
 `<ErrorType> at line <lineNumber>: <message>`

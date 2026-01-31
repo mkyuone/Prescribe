@@ -7,33 +7,24 @@ Executable pseudocode for learning algorithms.
 
 Source files must use the `.prsd` format (see `docs/prescribe/03-lexical-rules.md`).
 
+The C# implementation in `csharp/` is the current reference interpreter.
+
 ## Operations
 
-### Install
-```bash
-npm install
-```
+### Prerequisites
+- .NET 8 SDK
 
 ### Build
 ```bash
-npm run build
+dotnet build Prescribe.sln
 ```
 
 ### Run (CLI)
 ```bash
-node dist/cli/main.js <file.prsd>
+dotnet run --project csharp/Prescribe.Cli -- <file.prsd>
 ```
 
 Input is read from stdin as whitespace-delimited tokens. Output is written to stdout.
-
-### Build a runtime-free CLI (bundled Node)
-```bash
-npm run build:bin
-```
-
-Outputs platform binaries to `dist-bin/` (actual names include a platform suffix).
-
-These binaries run without a local Node installation.
 
 ### Example
 ```bash
@@ -47,7 +38,7 @@ ENDPROGRAM
 :::
 EOF
 
-node dist/cli/main.js /tmp/hello.prsd
+dotnet run --project csharp/Prescribe.Cli -- /tmp/hello.prsd
 ```
 
 ### Notes
