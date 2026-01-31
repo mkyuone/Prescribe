@@ -9,6 +9,8 @@ Source files must use the `.prsd` format (see `docs/prescribe/03-lexical-rules.m
 
 The C# implementation in `csharp/` is the current reference interpreter.
 
+Architecture overview: `docs/architecture.md`.
+
 ## Operations
 
 ### Prerequisites
